@@ -9,6 +9,33 @@ interface ChatMessageProps {
 const ChatMessage = ({ role, content }: ChatMessageProps) => {
   const isUser = role === "user";
 
+  // Simple markdown-like formatting for bold and lists
+  const formatContent = (text: string) => {
+    return text.split('\n').map((line, i) => {
+      // Handle bold text
+      let formattedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>');
+      
+      // Handle bullet points
+      if (line.trim().startsWith('- ') || line.trim().startsWith('• ')) {
+        formattedLine = `<span class="flex gap-2"><span>•</span><span>${formattedLine.replace(/^[-•]\s*/, '')}</span></span>`;
+      }
+      
+      // Handle numbered lists
+      const numberedMatch = line.match(/^(\d+)\.\s/);
+      if (numberedMatch) {
+        formattedLine = `<span class="flex gap-2"><span class="text-primary font-medium">${numberedMatch[1]}.</span><span>${formattedLine.replace(/^\d+\.\s*/, '')}</span></span>`;
+      }
+
+      return (
+        <span 
+          key={i} 
+          className="block"
+          dangerouslySetInnerHTML={{ __html: formattedLine || '&nbsp;' }}
+        />
+      );
+    });
+  };
+
   return (
     <div
       className={cn(
@@ -28,13 +55,15 @@ const ChatMessage = ({ role, content }: ChatMessageProps) => {
       </div>
       <div
         className={cn(
-          "max-w-[80%] px-4 py-3 rounded-2xl",
+          "max-w-[85%] px-4 py-3 rounded-2xl",
           isUser
             ? "bg-chat-user text-primary-foreground rounded-br-md"
             : "bg-chat-assistant text-foreground rounded-bl-md"
         )}
       >
-        <p className="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
+        <div className="text-sm leading-relaxed space-y-1">
+          {formatContent(content)}
+        </div>
       </div>
     </div>
   );
